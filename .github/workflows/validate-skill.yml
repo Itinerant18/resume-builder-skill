@@ -1,0 +1,95 @@
+name: Validate Skill File
+
+on:
+  pull_request:
+    paths:
+      - 'skill/resume-builder/SKILL.md'
+  push:
+    branches:
+      - main
+    paths:
+      - 'skill/resume-builder/SKILL.md'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate SKILL.md structure
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check SKILL.md exists
+        run: |
+          if [ ! -f "skill/resume-builder/SKILL.md" ]; then
+            echo "❌ SKILL.md not found at skill/resume-builder/SKILL.md"
+            exit 1
+          fi
+          echo "✅ SKILL.md found"
+
+      - name: Check YAML frontmatter present
+        run: |
+          HEAD=$(head -1 skill/resume-builder/SKILL.md)
+          if [ "$HEAD" != "---" ]; then
+            echo "❌ SKILL.md must start with YAML frontmatter (---)"
+            exit 1
+          fi
+          echo "✅ Frontmatter present"
+
+      - name: Check required frontmatter fields
+        run: |
+          if ! grep -q "^name:" skill/resume-builder/SKILL.md; then
+            echo "❌ Missing 'name:' in frontmatter"
+            exit 1
+          fi
+          if ! grep -q "^description:" skill/resume-builder/SKILL.md; then
+            echo "❌ Missing 'description:' in frontmatter"
+            exit 1
+          fi
+          echo "✅ Required frontmatter fields present"
+
+      - name: Check all 11 steps are present
+        run: |
+          MISSING=0
+          for i in 1 2 3 4 5 6 7 8 9 10 11; do
+            if ! grep -q "## Step $i" skill/resume-builder/SKILL.md; then
+              echo "❌ Missing Step $i"
+              MISSING=1
+            fi
+          done
+          if [ $MISSING -eq 0 ]; then
+            echo "✅ All 11 steps present"
+          else
+            exit 1
+          fi
+
+      - name: Check all 4 color palettes are defined
+        run: |
+          MISSING=0
+          for palette in "navy-gold" "slate-teal" "midnight-coral" "classic-mono"; do
+            if ! grep -q "$palette" skill/resume-builder/SKILL.md; then
+              echo "❌ Missing color palette: $palette"
+              MISSING=1
+            fi
+          done
+          if [ $MISSING -eq 0 ]; then
+            echo "✅ All 4 color palettes present"
+          else
+            exit 1
+          fi
+
+      - name: Check ATS safety rules present
+        run: |
+          if ! grep -q "ATS Safety Rules" skill/resume-builder/SKILL.md; then
+            echo "❌ ATS Safety Rules section is missing"
+            exit 1
+          fi
+          echo "✅ ATS Safety Rules present"
+
+      - name: Report file size
+        run: |
+          LINES=$(wc -l < skill/resume-builder/SKILL.md)
+          echo "📄 SKILL.md is $LINES lines"
+          if [ $LINES -gt 600 ]; then
+            echo "⚠️  Warning: SKILL.md exceeds 600 lines. Consider splitting into reference files."
+          fi

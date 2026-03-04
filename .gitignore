@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# LaTeX build artifacts (if anyone compiles locally)
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Generated resumes (keep templates, not outputs)
+resume_*.pdf
+resume_*.tex
